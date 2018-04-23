@@ -1,14 +1,15 @@
 package com.db.awmd.challenge.service;
 
-import com.db.awmd.challenge.domain.Account;
-import com.db.awmd.challenge.repository.AccountsRepository;
-import lombok.Getter;
-
 import java.math.BigDecimal;
 import java.util.Random;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+
+import com.db.awmd.challenge.domain.Account;
+import com.db.awmd.challenge.repository.AccountsRepository;
+
+import lombok.Getter;
 
 @Service
 public class AccountsService {
