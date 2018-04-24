@@ -2,6 +2,11 @@ package com.db.awmd.challenge.service;
 
 import java.math.BigDecimal;
 import java.util.Random;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -36,6 +41,15 @@ public class AccountsService {
 
 	private final Random number = new Random(123L);
 
+	/**
+	 * Method to Deposit Amount from one Account to another.
+	 * 
+	 * @param first
+	 * @param second
+	 * @param amount
+	 * @return
+	 * @throws InterruptedException
+	 */
 	private double depositAmount(Account first, Account second, double amount) throws InterruptedException {
 		while (true) {
 			if (first.getLock().tryLock()) {
@@ -64,27 +78,45 @@ public class AccountsService {
 		return first.getBalance().doubleValue();
 	}
 
+	/**
+	 * Method to Initiate Transfer from one account to another
+	 * 
+	 * @param firstAccountId
+	 * @param secondAccountId
+	 * @param amount
+	 * @return
+	 */
 	public int initiateTransfer(String firstAccountId, String secondAccountId, final double amount) {
 
-		Thread transfer = new Thread(new Runnable() {
-
-			public void run() {
-				try {
-					depositAmount(accountsRepository.getAccount(firstAccountId),
-							accountsRepository.getAccount(secondAccountId), amount);
-					notificationService.notifyAboutTransfer(accountsRepository.getAccount(firstAccountId),
-							"Transferred Amount" + amount + "To AccountID " + secondAccountId);
-					notificationService.notifyAboutTransfer(accountsRepository.getAccount(secondAccountId),
-							"Received Amount" + amount + "From AccountID " + firstAccountId);
-				} catch (InterruptedException e) {
-					Thread.currentThread().interrupt(); // Reset interrupted
-														// status
-				}
+		int result = 0;
+		Callable<Integer> callableObj = () -> {
+			try {
+				depositAmount(accountsRepository.getAccount(firstAccountId),
+						accountsRepository.getAccount(secondAccountId), amount);
+				notificationService.notifyAboutTransfer(accountsRepository.getAccount(firstAccountId),
+						"Transferred Amount" + amount + "To AccountID " + secondAccountId);
+				notificationService.notifyAboutTransfer(accountsRepository.getAccount(secondAccountId),
+						"Received Amount" + amount + "From AccountID " + firstAccountId);
+				System.out.println("First account" + accountsRepository.getAccount(firstAccountId).getBalance()
+						+ "jshaj" + accountsRepository.getAccount(secondAccountId).getBalance());
+				return 0;
+			} catch (InterruptedException e) {
+				Thread.currentThread().interrupt(); // Reset interrupted
+				return 1; // Error
 			}
-		});
+		};
 
-		transfer.start();
-		return 0;
+		ExecutorService service = Executors.newSingleThreadExecutor();
+		Future<Integer> future = service.submit(callableObj);
+		try {
+			result = future.get();
+		} catch (InterruptedException e) {
+			e.printStackTrace();
+		} catch (ExecutionException e) {
+			e.printStackTrace();
+		}
+		return result;
+
 	}
 
 }

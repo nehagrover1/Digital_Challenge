@@ -41,7 +41,7 @@ public class AccountsServiceTest {
 		this.accountsService.createAccount(firstAccount);
 		this.accountsService.createAccount(secondAccount);
 		int success = this.accountsService.initiateTransfer(firstAccount.getAccountId(), secondAccount.getAccountId(),
-				200);
+				500);
 		assertTrue((success) == 0);
 	}
 

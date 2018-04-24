@@ -119,4 +119,24 @@ public class AccountsControllerTest {
 				.andExpect(status().isOk());
 	}
 
+	@Test
+	public void transferAccountToAcount_insufficientBalance() throws Exception {
+		try {
+			String uniqueAccountId1 = "Id-123";
+			String uniqueAccountId2 = "Id-125";
+			Account firstAccount = new Account(uniqueAccountId1);
+			firstAccount.setBalance(new BigDecimal(1000));
+			Account secondAccount = new Account(uniqueAccountId2);
+			secondAccount.setBalance(new BigDecimal(500));
+			this.accountsService.createAccount(firstAccount);
+			this.accountsService.createAccount(secondAccount);
+			double amount = 5000.00;
+			this.mockMvc
+					.perform(put("/v1/accounts/" + amount + "/From/" + uniqueAccountId1 + "/To/" + uniqueAccountId2));
+
+		} catch (IllegalArgumentException ex) {
+			assertThat(ex.getMessage()).isEqualTo("Transfer cannot be completed.InsufficientBalance");
+		}
+	}
+
 }
