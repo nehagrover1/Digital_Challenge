@@ -115,6 +115,7 @@ public class AccountsService {
 		} catch (ExecutionException e) {
 			e.printStackTrace();
 		}
+		service.shutdown();
 		return result;
 
 	}
